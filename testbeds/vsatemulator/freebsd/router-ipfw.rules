@@ -1,0 +1,33 @@
+#!/bin/sh
+
+#Flush out thye list
+ipfw -q -f flush
+
+#set rules command refx
+cmd="ipfw -q add"
+
+# interfaces
+controlif=igb0
+clientif=igb1
+serverif=igb2
+
+# No restrictions on Loopback Interface
+$cmd 00010 allow all from any to any via lo0
+$cmd 00101 check-state
+
+$cmd 000200 allow all from any to any via $controlif
+
+#$cmd 1000 pipe 1 ip from any to any via $clientif
+
+#$cmd 1000 pipe 1 ip from 10.0.1.2 to any via $clientif
+$cmd 1000 pipe 1 ip from 10.0.1.0/24 to any via $clientif
+ipfw -q pipe 1 config delay 300ms bw 1500Kbit/s 
+
+#$cmd 2000 pipe 2 ip from any to $serverif
+
+#$cmd 1000 pipe 2 ip from 10.0.2.2 to any via $serverif
+$cmd 1000 pipe 2 ip from 10.0.2.0/24 to any via $serverif
+ipfw -q pipe 2 config delay 300ms bw 8500Kbit/s queue 640KB
+
+#allow everything
+$cmd 50000 allow all from any to any via any
